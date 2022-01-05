@@ -1,0 +1,26 @@
+{
+  "name": "prospect-roleplay-bot",
+  "version": "1.0.0",
+  "description": "A bot for Prospect Interactive",
+  "main": "bot.js",
+  "dependencies": {
+    "discord.js": "^13.0.1",
+    "dotenv": "^10.0.0",
+    "mysql": "^2.18.1",
+    "node": "16.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/adam_james/prospect-bot.git"
+  },
+  "author": "Aden Potts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/adam_james/prospect-bot/issues"
+  },
+  "homepage": "https://gitlab.com/adam_james/prospect-bot#readme"
+}
