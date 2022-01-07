@@ -15,7 +15,7 @@ module.exports = {
         }
 
         var req = https.get(options, (res) => {
-            console.log("[API] Got response code: " + res.statusCode);
+            console.log("[API] Got response code: " + res.statusCode + " res: " + jsondata);
 
             var jsondata = '';
                 
