@@ -24,7 +24,11 @@ module.exports = {
             });
 
             res.on('end', () => {
-                jsondata = JSON.parse(jsondata);
+                try {
+                    jsondata = JSON.parse(jsondata);
+                } catch (e) {
+                    console.log(`[API] Error parsing data! ${e}\nResult: ${jsondata}`);
+                }
 
                 if(cb) {
                     cb(jsondata);
