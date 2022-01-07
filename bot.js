@@ -5,6 +5,8 @@ const fs = require("fs");
 const {Client, Intents, Collection, MessageEmbed} = require('discord.js');
 const mysql = require('mysql');
 const http = require('http');
+const api = require("./exports/api-interface");
+
 var db;
 
 // vars used by the client
@@ -98,6 +100,22 @@ client.hasRole = function(member, roleid){
    rt = member.roles.cache.has(roleid);
 
 	return rt;
+}
+
+client.SendMessage = (usr, message) => {
+    try{
+        usr.send(message);
+    } catch (err) {
+        console.log(`[MESSAGE ERR] ${err}`);
+    }
+}
+
+client.AddRole = (usr, roleid) => {
+    try {
+        usr.roles.add(roleid);
+    } catch (e) {
+        console.log(`[ADD ROLE ERR] ${e}`);
+    }
 }
 
 client.fivemQuery = (sql, cb) => {
