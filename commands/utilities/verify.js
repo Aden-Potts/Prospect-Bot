@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const api = require("../../exports/api-interface");
 
 module.exports = {
     name: 'verify',
@@ -12,42 +13,39 @@ module.exports = {
         var member = message.member;
         let code = args[0];
 
- 
+
 
         code = parseInt(code);
         if(code.type == "string"){
-             console.log('passed string for discord auth: ' + code);
-             message.member.user.send("Oops, that code isn't a valid number. Try again.");
-             message.delete()
-            return;
-         }
+            client.SendMessage(message.member.user, "This code isn't a valid number. Try agian.");
+            message.delete()
 
-            client.fivemQuery(`SELECT * FROM discord_verification WHERE authentication = ${code}`, function(success, res2){
-                if(!success){
-                    message.member.user.send(`Uh oh! An error occured!`);
-                    message.delete()
-                    return;
-                }else if(!res2[0]){
-                    message.member.user.send("Uh oh! The provided code is invalid.");
-                    message.delete()
+            return;
+        }
+
+        api.GET(`discord/verification/${code}/${message.member.user.id}`, (data) => {
+            let resData = data;
+
+            if(resData["Response"] == "No result" || resData["Code"] != 200) {
+                client.SendMessage(message.member.user, "This code is not valid!");
+            } else {
+                if(resData["Response"] == "Code already used") {
+                    client.SendMessage(message.member.user, "This code was already used!");
+                    message.delete();
+
                     return;
                 }
 
-                client.fivemQuery(`UPDATE discord_verification SET active = 1, discord_id = ${message.member.id} WHERE authentication = ${code}`, function(success, res3){
-                    if(!success){
-                        message.member.user.send("Uh oh! An error occured!");
-                        message.delete()
-                        return;
-                    }else{
+                if(data["Response"]== "Verified") {
+                    client.SendMessage(message.member.user, "Success! You've been verified!");
+                    client.AddRole(message.member, '735631264153075814');
 
-                        client.fivemQuery(``)
-                        message.member.user.send("Success! You've linked! Go ingame and type /claim to get your reward!");
-                        message.member.roles.add('735631264153075814');
-
-                        message.delete()
-                        return;
-                    }
-                });
-            });
+                } else {
+                    client.SendMessage(message.member.user, resData["Response"]);
+                }
+            }
+        });
+        
+        message.delete();
     }
 }
