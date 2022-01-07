@@ -15,7 +15,7 @@ module.exports = {
         }
 
         var req = https.get(options, (res) => {
-            console.log("[API] Got response code: " + res.statusCode + " res: " + jsondata);
+            console.log("[API] Got response code: " + res.statusCode);
 
             var jsondata = '';
                 
@@ -24,6 +24,7 @@ module.exports = {
             });
 
             res.on('end', () => {
+                console.log(jsondata);
                 try {
                     jsondata = JSON.parse(jsondata);
                 } catch (e) {
