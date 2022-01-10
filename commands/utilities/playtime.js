@@ -24,9 +24,12 @@ module.exports = {
         let overallPlaytime = 0;
         let topplaytime = 0;
         let discordid = message.member.id;
+        let memb = message.member;
 
         if(message.mentions.users.size){
-            discordid = message.mentions.members.first().id
+            memb = message.mentions.members.first();
+
+            discordid = memb.id
         }
 
         API.GET(`user/${discordid}/getplaytime`, (data, resCode) => {
@@ -43,9 +46,9 @@ module.exports = {
             let chars = data["characterData"];
             
             let currentTop = ["none", 0];
-            chars.forEach((k, v) => {
+            chars.forEach((v, k) => {
                 if(v["Playtime"] > currentTop[1]) {
-                    currentTop = [`${v["firstname"]} ${v["lastname"]}`, v["Playtime"]];
+                    currentTop = [`${v["firstname"]} ${v["lastname"]}`, v["Playtime"] / 3600];
                 }
             })
 
@@ -53,7 +56,7 @@ module.exports = {
             playtimeMonthly = parseFloat(playtimeMonthly).toFixed(1);
             topplaytime = parseFloat(currentTop[1]).toFixed(1);
             let fields = [{name: "Overall Playtime", value:"``" + overallPlaytime + " hours``"}, {name: "Monthly Playtime", value: "``" + playtimeMonthly + " hours``"}, {name: "Top Played Character", value: currentTop[0] + " with " + topplaytime + " hours of playtime."}];
-            const msg = client.EmbedMessage(message.member.user.username + "'s Playtime", fields, message.member.user, message.member.user.avatarURL());
+            const msg = client.EmbedMessage(memb.user.username + "'s Playtime", fields, memb.user, memb.user.avatarURL());
 
             message.reply({embeds: [msg]});
 
