@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const https = require("https");
-
+const Logger = require("./logging");
 const link = process.env.APILINK;
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
 
         try {
             var req = https.get(options, (res) => {
-                console.log("[API] Got response code: " + res.statusCode);
+                Logger.Log(`API sent response code: ${res.statusCode}`);
     
                 var jsondata = '';
                     
@@ -29,11 +29,13 @@ module.exports = {
                     try {
                         jsondata = JSON.parse(jsondata);
                     } catch (e) {
-                        console.log(`[API] Error parsing data! ${e}\nResult: ${jsondata}`);
+                        Logger.Error(`Failed to parse API response! Error: ${e}`);
+
+                        return;
                     }
     
                     if(cb) {
-                        cb(jsondata);
+                        cb(jsondata, res.statusCode);
                     }
                 });
             });

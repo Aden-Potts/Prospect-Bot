@@ -160,30 +160,6 @@ client.createDBObj = function(){
 	return rt;
 }
 
-client.createBotDB = () =>{
-	var rt = mysql.createConnection({
-		host: process.env.fivemhost,
-		user: process.env.fivemuser,
-		password: process.env.fivempw,
-		database: 'dev_server'
-	});
-
-	rt.connect(function(err){
-		if(err) throw err;
-
-		console.log(console.info, "FiveM DB obj created");
-	});
-
-	keepSQL();
-
-	return rt;
-}
-
-client.Escape = (str) => {
-	return mysql.escape(str);
-}
-
-
 client.on('ready', () => {
 	console.log("Creating database object...");
 
@@ -203,7 +179,14 @@ client.on('ready', () => {
 		res.on('end', () => {
             jsondata = JSON.parse(jsondata);
 
-            client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: ${jsondata.online}/48`);
+            if(!client.guilds.cache.get("538413338913407006")) {
+                return;
+            }
+
+            client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: ${jsondata.online}/48`).catch((e) => {
+                console.log("Failed to set status channel.");
+            });
+
             updateServerStatus();
 		})
 	});
@@ -223,7 +206,9 @@ function updateServerStatus(){
 			res.on('end', () => {
                 jsondata = JSON.parse(jsondata);
 
-                client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: ${jsondata.online}/48`);
+                client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: ${jsondata.online}/48`).catch((e) => {
+                    console.log("Failed to set status channel.");
+                });
 			})
 		});
 
