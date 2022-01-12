@@ -6,6 +6,7 @@ const {Client, Intents, Collection, MessageEmbed, Permissions} = require('discor
 const mysql = require('mysql');
 const http = require('http');
 const api = require("./exports/api-interface");
+const Logger = require("./exports/logging");
 
 var db;
 
@@ -218,22 +219,22 @@ function updateServerStatus(){
 }
 
 client.on('guildMemberAdd', member => {
-	console.log(`[New Member] Checking if ${member.name} is verified.`);
+	Logger.Log(`${member.name} joined the discord server, checking if they're FiveM verified...`);
 
-	client.fivemQuery(`SELECT * FROM users WHERE discord = 'discord:${member.id}'`, (success, res) => {
-		if(!success){
-			console.error("Failed to check if user is verified...");
-			return;
-		}
+    api.GET(`discord/isverified/${member.id}`, (d) => {
+        if(d.Response == false) {
+            Logger.Log(`${member.name} is not FiveM Verified.`);
 
-		if(res[0]){
-			console.log(`${member.name} is verified and rejoined the discord. Assigning role.`);
+            return;
+        }
 
-			member.roles.add("735631264153075814");
-
+        try {
+            member.roles.add("735631264153075814");
 			member.user.send("Welcome back! You've previously linked your Discord account with us, and have been granted the verified role automatically.");
-		}
-	});
+        } catch(e) {
+            Logger.Error(e);
+        }
+    });
 });
 
 const loadCommands = fs.readdirSync('./commands');
