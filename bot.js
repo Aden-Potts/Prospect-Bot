@@ -2,7 +2,7 @@ require("dotenv").config();
 
 // depedency
 const fs = require("fs");
-const {Client, Intents, Collection, MessageEmbed} = require('discord.js');
+const {Client, Intents, Collection, MessageEmbed, Permissions} = require('discord.js');
 const mysql = require('mysql');
 const http = require('http');
 const api = require("./exports/api-interface");
@@ -310,7 +310,7 @@ client.on('messageCreate', msg => {
 				console.log(msg.member.user.username + " had a fatal error while running " + cmd + " error: \n" + error);
 				msg.reply("Error running command!\n```" + error + "```");
 			}
-		}else if(msg.member.hasPermission(cmdobj.permission) || msg.member.hasPermission('ADMINISTRATOR')){
+		}else if(msg.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || msg.member.permissions.has(cmdobj.permission)){
 			if(args.length < cmdobj.reqargs){
 				msg.reply("you are missing required args! Usage: ```!" + cmd + " " + cmdobj.usage + "```");
 				return;
