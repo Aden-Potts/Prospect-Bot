@@ -168,8 +168,6 @@ client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 
    var req = http.get("http://54.39.131.111:30120/queuemanager/getcurrentstats", (res) => {
-        console.log("Got response: " + res.statusCode);
-
         var jsondata = '';
 			
 		res.on('data', (chunk) => {
@@ -195,8 +193,6 @@ client.on('ready', () => {
 function updateServerStatus(){
 	setTimeout(function(){
 		var req = http.get("http://54.39.131.111:30120/queuemanager/getcurrentstats", (res) => {
-			console.log("Got response from queuemanager: " + res.statusCode);
-
 			var jsondata = '';
 			
 			res.on('data', (chunk) => {
@@ -214,7 +210,7 @@ function updateServerStatus(){
 
 		req.on('error', (e) => {
             client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: Offline 😭`);
-			console.log("HTTP ERROR: " + e.message);
+			console.log("SERVER STATUS: HTTP ERROR: " + e.message);
 		});
 
 		updateServerStatus();
