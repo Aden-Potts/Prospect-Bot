@@ -103,20 +103,44 @@ client.hasRole = function(member, roleid){
 	return rt;
 }
 
-client.SendMessage = (usr, message) => {
-    try{
-        usr.send(message);
-    } catch (err) {
-        console.log(`[MESSAGE ERR] ${err}`);
+client.SendMessage = (usr, message, timeDelete = null) => {
+    if(timeDelete) {
+        timeDelete = parseFloat(timeDelete) * 1000;
+
+        usr.send(message).then(newMsg => {
+            setTimeout(() => {
+                newMsg.delete().catch(Logger.Error);
+            }, timeDelete);
+        }).catch(Logger.Error);
+
+        return;
     }
+
+    usr.send(message).catch(Logger.Error);
+}
+
+client.ReplyMessage = (msg, reply, timeDelete = null) => {
+    if(timeDelete) {
+        timeDelete = parseFloat(timeDelete) * 1000;
+
+        msg.reply(reply).then(message => {
+            setTimeout(() => {
+                message.delete().catch(Logger.Error);
+            }, timeDelete);
+        }).catch(Logger.Error);
+
+        return;
+    }
+
+    msg.reply(reply).catch(Logger.Error);
+}
+
+client.ChannelSend = (channel, message, timeDelete) => {
+
 }
 
 client.AddRole = (usr, roleid) => {
-    try {
-        usr.roles.add(roleid);
-    } catch (e) {
-        console.log(`[ADD ROLE ERR] ${e}`);
-    }
+    usr.roles.add(roleid).catch(Logger.Error);
 }
 
 client.fivemQuery = (sql, cb) => {
@@ -230,7 +254,7 @@ client.on('guildMemberAdd', member => {
 
         try {
             member.roles.add("735631264153075814");
-			member.user.send("Welcome back! You've previously linked your Discord account with us, and have been granted the verified role automatically.");
+            client.SendMessage(member.user, "Welcome back! You've previously linked your Discord account with us, and have been granted the verified role automatically.")
         } catch(e) {
             Logger.Error(e);
         }
@@ -238,7 +262,6 @@ client.on('guildMemberAdd', member => {
 });
 
 const loadCommands = fs.readdirSync('./commands');
-
 for(const folder of loadCommands){
 	const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
 
@@ -297,30 +320,36 @@ client.on('messageCreate', msg => {
 
 		if(cmdobj.permission == 0){
 			if(args.length < cmdobj.reqargs){
-				msg.reply("you are missing required args! Usage: ```!" + cmd + " " + cmdobj.usage + "```");
+				client.ReplyMessage(msg, `Oops, you're missing required command arguments. Usage: \`\`\`!${cmd} ${cmdobj.usage}\`\`\``, 60);
+
 				return;
 			}
 
 			try {
 				cmdobj.execute(msg, args)
 			} catch(error){
-				console.log(msg.member.user.username + " had a fatal error while running " + cmd + " error: \n" + error);
-				msg.reply("Error running command!\n```" + error + "```");
+				Logger.Error(`${msg.member.name} had an error while executing command ${cmd}: ${error}`);
+
+				client.ReplyMessage(msg, `Error running command!\n\`\`\`${error}\`\`\``, 60);
+
+                return;
 			}
+
 		}else if(msg.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || msg.member.permissions.has(cmdobj.permission)){
 			if(args.length < cmdobj.reqargs){
-				msg.reply("you are missing required args! Usage: ```!" + cmd + " " + cmdobj.usage + "```");
-				return;
+				client.ReplyMessage(msg, `Oops, you're missing required command arguments. Usage: \`\`\`!${cmd} ${cmdobj.usage}\`\`\``, 60);
+
+                return;
 			}
 			try {
 				cmdobj.execute(msg, args)
 			} catch(error){
-				console.log(msg.member.user.username + " had a fatal error while running " + cmd + " error: \n" + error);
-	
-				msg.reply("Error running command!\n```" + error + "```");
+                Logger.Error(`${msg.member.name} had an error while executing command ${cmd}: ${error}`);
+
+				client.ReplyMessage(msg, `Error running command!\n\`\`\`${error}\`\`\``, 60);
 			}
 		}else{
-			msg.reply('You do not have permission to execute this command');
+			client.ReplyMessage(msg, "Sorry, but you do not have access to run this command.", 60);
 		}
 	}
 });
