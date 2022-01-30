@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const API = require("../../exports/api-interface");
 const Prospect = require("../../exports/prospect-utils");
+const Logger = require("../../exports/logging");
 
 module.exports = {
     name: 'duty',
