@@ -15,7 +15,7 @@ const Roles = {
 
 const PDRoles = {
     "723142305405730847": ["pdhc", "pdc", "pdspv", "pdd", "pdfto", "pd"], // pd high command
-    "723142433885651014": ["pdc", "pdspv", "pdd", "pdfto", "pd"], // pd command
+    "723142433885651014": ["pdc", "pdspv", "pdd", "pdfto", "pd"], // pd command 723142433885651014
     "723142515217399818": ["pdspv", "pdd", "pdfto", "pd"], // pd spv whatever the fuck that means
     "828657657799508018": ["pdd", "pdfto", "pd"], // detective
     "723251977579921480": ["pdfto", "pd"], // fto
@@ -94,23 +94,28 @@ module.exports = {
         }
 
         if(access.indexOf('pd') != -1) { // all pd roles have pd in the access string.
+            let result = false;
 
             usr.roles.cache.forEach((v, k) => {
-                if(PDRoles[k] && PDRoles[k].includes(access)) {
-                    return true;
+                if(PDRoles[k] != undefined && PDRoles[k].includes(access)) {
+                    console.log("has perms");
+                    
+                    result = true;
                 }
             });
 
-            return false;
+            return result;
         }
+
+        let result = false;
         
         usr.roles.cache.forEach((v, k) => {
-            if(Roles[k] && Roles[k].includes(access)) {
-                return true;
+            if(Roles[k] != undefined && Roles[k].includes(access)) {
+                result = true;
             }
         });
 
-        return false;
+        return result;
     },
 
     HasRole: (role, usr) => {
