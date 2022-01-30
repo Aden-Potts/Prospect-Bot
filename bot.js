@@ -3,12 +3,12 @@ require("dotenv").config();
 // depedency
 const fs = require("fs");
 const {Client, Intents, Collection, MessageEmbed, Permissions} = require('discord.js');
-const mysql = require('mysql');
 const http = require('http');
 const api = require("./exports/api-interface");
 const Logger = require("./exports/logging");
+const Prospect = require("./exports/prospect-utils");
 
-var db;
+let Config;
 
 // vars used by the client
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.DIRECT_MESSAGES]});
@@ -81,13 +81,6 @@ client.EmbedMessage = function(title, fields, user, thumbnail, desc){
 	return rt;
 }
 
-client.getDB = function(){
-	if(!db){
-		db = client.createDBObj();
-	}
-	return db;
-}
-
 client.hasRole = function(member, roleid){
 	var rt = false;
 
@@ -144,25 +137,7 @@ client.AddRole = (usr, roleid) => {
 }
 
 client.fivemQuery = (sql, cb) => {
-	db.getConnection((err, conn) => {
-		if(err){
-			console.error(err);
-			if(cb) cb(false)
-			return;
-		}
-
-		conn.query(sql, (err, res) => {
-			conn.release();
-
-			if(err){
-				console.error(err);
-				if(cb) cb(false);
-				return;
-			}
-
-			if(cb) cb(true, res);
-		});
-	});
+	return;
 }
 
 client.isStaff = function(minrank, member){
@@ -171,28 +146,14 @@ client.isStaff = function(minrank, member){
 	return false;
 }
 
-client.createDBObj = function(){
-	var rt = mysql.createPool({
-		connectionLimit: 1,
-		host: process.env.fivemhost,
-		user: process.env.fivemuser,
-		password: process.env.fivempw,
-		database: 'dev_server'
-	});
-
-	console.log("Created FiveM MySQL Pool");
-
-	return rt;
-}
-
 client.on('ready', () => {
-	console.log("Creating database object...");
+	Logger.Info("Bot client ready, initializing...");
 
-	db = client.createDBObj();
+    Prospect.Init(client);
 
-	console.log(`Logged in as ${client.user.tag}!`);
+    Config = Prospect.Config;
 
-   var req = http.get("http://54.39.131.111:30120/queuemanager/getcurrentstats", (res) => {
+    var req = http.get("http://54.39.131.111:30120/queuemanager/getcurrentstats", (res) => {
         var jsondata = '';
 			
 		res.on('data', (chunk) => {
@@ -281,6 +242,14 @@ client.on('messageCreate', msg => {
         return;
     }
 
+    if(Config.FilteredWords.includes(msg.content) && Prospect.HasAccess("m", msg.member)) { // staff can use these words so they can, ie, ban someone spamming nigger without the bot going ape shit for saying nigger.
+        msg.channel.send(`Hey ${msg.member.toString()}, that word wasn't very cool. Please refrain from saying that.`)
+            .then(msg.delete())
+            .catch(Logger.Error);
+
+        Prospect.ModerationLog("Message Deleted", `${msg.member.user.tag} said ${msg.content}, which is a filtered word.`);
+    }
+
 	if(msg.content.substring(0, 1)== "!"){
 		let args = msg.content.split(" ");
 		let cmd = args[0].replace('!', '');
@@ -292,52 +261,14 @@ client.on('messageCreate', msg => {
 		args.splice(0, 1);
 		let argtxt = args.join(" ");
 
-		if(args.length == 0) argtxt = "<NONE>"
-		console.log(msg.member.user.username + " attempted to run command " + cmd + " with args " + argtxt);
+		if(args.length == 0) 
+            argtxt = "<NONE>";
 
-		if(cmdobj.category == "Police"){
-			if(!client.hasRole(msg.member, client.ranks.police)){
-				msg.reply("you are not a Police Officer!");
-				return;
-			}
+		Logger.Info(`${msg.member.user.username} attempted to run command ${cmd}. Arguments: ${argtxt}`);
 
-			let perm = cmdobj.policeperms;
-
-			if(perm == "fto" && !client.hasRole(msg.member, client.ranks.policefto)){
-				msg.reply("you are not an FTO!");
-				return;
-			}else if(perm == "cpl+" && !client.hasRole(msg.member, client.ranks.policecpl)){
-				msg.reply("you are not a Corporal+");
-				return;
-			}else if(perm == "command" && !client.hasRole(msg.member, client.ranks.policecommand)){
-				msg.reply("you are not Command!");
-				return;
-			}else if(perm == "highcommand" && !client.hasRole(msg.member, client.ranks.policehighcommand)){
-				msg.reply("you are not High Command!");
-				return;
-			}
-		}
-
-		if(cmdobj.permission == 0){
+		if(Prospect.HasAccess(cmdobj.permission, msg.member)){
 			if(args.length < cmdobj.reqargs){
-				client.ReplyMessage(msg, `Oops, you're missing required command arguments. Usage: \`\`\`!${cmd} ${cmdobj.usage}\`\`\``, 60);
-
-				return;
-			}
-
-			try {
-				cmdobj.execute(msg, args)
-			} catch(error){
-				Logger.Error(`${msg.member.name} had an error while executing command ${cmd}: ${error}`);
-
-				client.ReplyMessage(msg, `Error running command!\n\`\`\`${error}\`\`\``, 60);
-
-                return;
-			}
-
-		}else if(msg.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) || msg.member.permissions.has(cmdobj.permission)){
-			if(args.length < cmdobj.reqargs){
-				client.ReplyMessage(msg, `Oops, you're missing required command arguments. Usage: \`\`\`!${cmd} ${cmdobj.usage}\`\`\``, 60);
+				Prospect.TimedReply(msg, `Oops, you're missing required command arguments. Usage: \`\`\`!${cmd} ${cmdobj.usage}\`\`\``, 60);
 
                 return;
 			}
@@ -346,10 +277,10 @@ client.on('messageCreate', msg => {
 			} catch(error){
                 Logger.Error(`${msg.member.name} had an error while executing command ${cmd}: ${error}`);
 
-				client.ReplyMessage(msg, `Error running command!\n\`\`\`${error}\`\`\``, 60);
+				Prospect.TimedReply(msg, `Error running command!\n\`\`\`${error}\`\`\``, 60);
 			}
 		}else{
-			client.ReplyMessage(msg, "Sorry, but you do not have access to run this command.", 60);
+			Prospect.TimedReply(msg, "Sorry, but you do not have access to run this command.", 60);
 		}
 	}
 });

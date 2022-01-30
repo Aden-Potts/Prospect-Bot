@@ -19,7 +19,7 @@ module.exports = {
     },
 
     Debug: (msg) => {
-        console.log(`${TYPES["ERROR"]} ${msg}`);
+        console.log(`${TYPES["DEBUG"]} ${msg}`);
     },
 
     Log: (msg) => { // basically just log.Info()

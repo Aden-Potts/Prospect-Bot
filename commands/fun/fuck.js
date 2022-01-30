@@ -1,25 +1,25 @@
-const Discord = require("discord.js");
+const {Permissions} = require("discord.js");
+const Prospect = require("../../exports/prospect-utils");
 
 module.exports = {
     name: 'fuck',
     description: 'Shit',
     usage: 'none',
     category: 'Fun',
-    permission: 0,
-    reqargs: 2,
+    permission: Permissions.FLAGS.KICK_MEMBERS,
+    reqargs: 0,
     execute(message, args){
-       message.reply("ur a fuckstick");
-       var db = message.client.getDB();
+        message.reply("ur a fuckstick");
+      
+        let target = Prospect.GetTaggedMemberUser(message, args[0]);
+        if(!target) {
+            message.reply("This user was not found. Try tagging them instead.");
 
-       console.log(message.client.hasRole(message.member, "502031842229223424"));
+            return;
+        }
 
-       console.log(message.client.isStaff(message.client.ranks.management, message.member));
+        let member = target[1];
 
-       db.query('SELECT * FROM `characters` WHERE `id` = 5', function(err, res){
-        if(err) throw err;
-        console.log(res[0].firstname);
-
-       });
-        //taggedMember.kick(reason);
+        message.reply(`User: ${target[0].username} | Member ID: ${member.id}`);
     }
 }

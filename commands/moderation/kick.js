@@ -1,5 +1,6 @@
 const {Permissions} = require("discord.js");
 const Logger = require("../../exports/logging");
+const Prospect = require("../../exports/prospect-utils");
 
 module.exports = {
     name: 'kick',
@@ -9,13 +10,19 @@ module.exports = {
     permission: Permissions.FLAGS.KICK_MEMBERS,
     reqargs: 2,
     execute(message, args){
-        if(!message.mentions.users.size) return message.reply('You need to tag a user!');
 
-        const taggedUser = message.mentions.users.first();
-        const taggedMember = message.mentions.members.first();
+        let target = Prospect.GetTaggedMemberUser(message, args[0]);
+        if(!target) {
+            Prospect.TimedReply(message, "I couldn't find this user. Try tagging them.", 30);
+
+            return;
+        }
+
+        const taggedUser = target[0];
+        const taggedMember = target[1];
 
         if(taggedMember.permissions.has(Permissions.FLAGS.ADMINISTRATOR)){
-            message.reply("You cannot kick senior staff!");
+            Prospect.TimedReply(message, "You cannot kick senior staff!");
             return;
         }
         let executeUser = message.member.user;
@@ -25,6 +32,8 @@ module.exports = {
 
         const msg = message.client.EmbedMessage("Message", {name: 'Success!', value: `Kicked ${taggedUser.username} for **${reason}**`}, executeUser, '');
         taggedUser.send("Ah shucks! You've been discarded from the FiveM Discord. That sucks!\nReason for *kick*: ```" + reason + "```").catch(Logger.Error);
+        Prospect.ModerationLog("User Kicked", `${executeUser} kicked ${taggedMember.name} for reason ${reason}`, message.member.user);
+
         taggedMember.kick(reason).then(message.reply({embeds: [msg]})).catch((e) => {
             Logger.Error(e);
 

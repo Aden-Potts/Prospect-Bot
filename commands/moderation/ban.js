@@ -22,6 +22,7 @@ module.exports = {
         args.splice(0, 1);
 
         let reason = args.join(" ");
+        reason = `${reason} -${executeUser.tag}`;
 
         const msg = message.client.EmbedMessage("Message", {name: 'Success!', value: `Banned ${taggedUser.username} for **${reason}**`}, executeUser, '');
         message.reply({embeds: [msg]});
