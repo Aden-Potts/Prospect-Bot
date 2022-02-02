@@ -186,10 +186,21 @@ function updateServerStatus(){
 			});
 
 			res.on('end', () => {
-                jsondata = JSON.parse(jsondata);
+                if(jsondata == '') {
+                    Logger.Warning("Queue manager returned nothing?");
+
+                    return;
+                }
+                try {
+                    jsondata = JSON.parse(jsondata);
+                } catch(e) {
+                    Logger.Error(`Failed to parse queuemanager response: ${e}`);
+
+                    return;
+                }
 
                 client.guilds.cache.get("538413338913407006").channels.cache.get("874806925089464330").setName(`❓FiveM Status: ${jsondata.online}/48`).catch((e) => {
-                    console.log("Failed to set status channel.");
+                   Logger.Error(`Failed to set status channel: ${e}`);
                 });
 			})
 		});
@@ -204,11 +215,11 @@ function updateServerStatus(){
 }
 
 client.on('guildMemberAdd', member => {
-	Logger.Log(`${member.name} joined the discord server, checking if they're FiveM verified...`);
+	Logger.Log(`${member.user.username} joined the discord server, checking if they're FiveM verified...`);
 
     api.GET(`discord/isverified/${member.id}`, (d) => {
         if(d.Response == false) {
-            Logger.Log(`${member.name} is not FiveM Verified.`);
+            Logger.Log(`${member.user.username} is not FiveM Verified.`);
 
             return;
         }
