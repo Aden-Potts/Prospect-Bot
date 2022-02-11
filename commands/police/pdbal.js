@@ -18,9 +18,20 @@ module.exports = {
                 return;
             }
 
-            let balance = Number(data['Response'][0].balance).toLocaleString();
+            let names = {
+                "LSCSO": "Los Santos County Sheriff's Office",
+                "SAST": "San Andreas State Police",
+                "GW": "Game Warden"
+            }
 
-            const msg = message.client.EmbedMessage("Los Santos County Sheriffs Office", {name: "Account Balance", value: `$${balance}`}, message.member.user, message.member.user.avatarURL());
+            let fields = [];
+            let balance = Number(data['Response'][0].balance).toLocaleString();
+            data['Response'].forEach((v, k) => {
+                let bal = Number(v.balance).toLocaleString();
+                fields.push({name: names[v.name], value: `$${bal}`});
+            });
+
+            const msg = message.client.EmbedMessage("San Andreas Department of Public Safety Budget", fields, message.member.user, message.member.user.avatarURL());
             
             message.reply({embeds: [msg]});
         })
